@@ -73,39 +73,39 @@ const Hero = () => {
             willChange: "transform",
           });
 
-          if (isMobile) {
-            const tl = gsap.timeline({
-              scrollTrigger: {
-                trigger: triggerRef.current,
-                start: "top top",
-                end: "+=200%",
-                scrub: 1,
-                fastScrollEnd: true,
-                invalidateOnRefresh: true,
-                anticipatePin: 1,
-              },
-            });
+         if (isMobile) {
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: triggerRef.current,
+      start: "top top",
+      end: "+=120%", // was +=200% — panels now complete in less scroll distance
+      scrub: 0.4,     // was 1 — tighter tracking to touch/scroll input, less "lag" feel
+      fastScrollEnd: true,
+      invalidateOnRefresh: true,
+      anticipatePin: 1,
+    },
+  });
 
-            tl.to(leftPanelRef.current, { xPercent: -100, ease: "none", duration: 1, force3D: true }, 0);
-            tl.to(rightPanelRef.current, { xPercent: 100, ease: "none", duration: 1, force3D: true }, 0);
+  tl.to(leftPanelRef.current, { xPercent: -100, ease: "none", duration: 1, force3D: true }, 0);
+  tl.to(rightPanelRef.current, { xPercent: 100, ease: "none", duration: 1, force3D: true }, 0);
 
-            tl.fromTo(
-              textContainerRef.current,
-              { y: "100vh", opacity: 0 },
-              { y: 0, opacity: 1, duration: 0.5, ease: "power2.out", force3D: true },
-              0.5
-            );
+  tl.fromTo(
+    textContainerRef.current,
+    { y: "100vh", opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.5, ease: "power2.out", force3D: true },
+    0.5
+  );
 
-            ScrollTrigger.create({
-              trigger: triggerRef.current,
-              pin: containerRef.current,
-              start: "top top",
-              end: "+=200%",
-              pinSpacing: true,
-              invalidateOnRefresh: true,
-              anticipatePin: 1,
-            });
-          } else {
+  ScrollTrigger.create({
+    trigger: triggerRef.current,
+    pin: containerRef.current,
+    start: "top top",
+    end: "+=120%", // must match the timeline's end above
+    pinSpacing: true,
+    invalidateOnRefresh: true,
+    anticipatePin: 1,
+  });
+} else {
             const tl = gsap.timeline({
               scrollTrigger: {
                 trigger: triggerRef.current,
