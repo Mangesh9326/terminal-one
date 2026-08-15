@@ -6,7 +6,10 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <OurClients />
+      <Contact/>
+      <Contact/>
+      <Contact/>
+      <Contact/>
       <Contact/>
     </>
   );
