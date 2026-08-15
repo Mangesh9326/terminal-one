@@ -24,3 +24,36 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 
+  Marquee Animation 
+  Translates exactly -50% to seamlessly replace Set 1 with Set 2.
+*/
+@keyframes clients-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Base mobile speed */
+.animate-marquee {
+  animation: clients-marquee 45s linear infinite;
+  will-change: transform; /* Optimizes GPU rendering */
+}
+
+/* Slower, more cinematic speed for tablet/desktop */
+@media (min-width: 768px) {
+  .animate-marquee {
+    animation: clients-marquee 50s linear infinite;
+  }
+}
+
+/* Accessibility: Stop continuous motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

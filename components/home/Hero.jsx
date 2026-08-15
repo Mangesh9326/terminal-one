@@ -6,8 +6,28 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const leftImages = ["1.jpg", "2.jpg", "3.jpg"];
-const rightImages = ["4.jpg", "5.jpg", "6.jpg"];
+// ---------------------------------------------------------------------------
+// Image sources
+// Each entry has a mobile (smaller) and desktop (larger) WebP variant.
+// Generate these before upload, e.g.:
+//   npx @squoosh/cli --webp '{"quality":75}' ./public/images/*.jpg -d ./public/images/webp
+// then resize a second, mobile-width copy (~800px wide) alongside the
+// desktop copy (~1600px wide), named like below.
+// ---------------------------------------------------------------------------
+const leftImages = [
+  { mobile: "1-800.webp", desktop: "1-2000.webp" },
+  { mobile: "2-800.webp", desktop: "2-2000.webp" },
+  { mobile: "3-800.webp", desktop: "3-2000.webp" },
+];
+
+const rightImages = [
+  { mobile: "4-800.webp", desktop: "4-2000.webp" },
+  { mobile: "5-800.webp", desktop: "5-2000.webp" },
+  { mobile: "6-800.webp", desktop: "6-2000.webp" },
+];
+
+const IMG_WIDTH = 1600;
+const IMG_HEIGHT = 1200;
 
 const Hero = () => {
   const triggerRef = useRef(null);
@@ -19,10 +39,15 @@ const Hero = () => {
   const leftImgRefs = useRef([]);
   const rightImgRefs = useRef([]);
 
-  // 1. Slideshow driven by GSAP's own ticker (same RAF loop as scroll animation)
-  // instead of a competing setInterval timer thread — removes main-thread contention.
+  // -------------------------------------------------------------------------
+  // 1. Slideshow, driven by GSAP's ticker, paused when the tab is hidden.
+  //    Avoids burning CPU/battery on an animation nobody is looking at —
+  //    matters most on low-end mobile hardware.
+  // -------------------------------------------------------------------------
   useEffect(() => {
     let idx = 0;
+    let delayedTicker;
+
     const applyOpacity = () => {
       leftImgRefs.current.forEach((el, i) => {
         if (el) el.style.opacity = i === idx ? "1" : "0";
@@ -32,29 +57,55 @@ const Hero = () => {
       });
     };
 
-    const tick = () => {
-      idx = (idx + 1) % 3;
-      applyOpacity();
+    const scheduleNext = () => {
+      delayedTicker = gsap.delayedCall(1, () => {
+        idx = (idx + 1) % 3;
+        applyOpacity();
+        scheduleNext();
+      });
     };
 
-    // repeat: -1 => infinite, on GSAP's shared ticker
-    const delayedTicker = gsap.delayedCall(1, function repeatFn() {
-      tick();
-      gsap.delayedCall(1, repeatFn);
-    });
+    const start = () => {
+      if (!delayedTicker) scheduleNext();
+    };
+
+    const stop = () => {
+      delayedTicker?.kill();
+      delayedTicker = null;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    start();
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      delayedTicker.kill();
+      stop();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
+  // -------------------------------------------------------------------------
   // 2. GSAP Scroll Animations (Responsive via matchMedia)
+  // -------------------------------------------------------------------------
   useLayoutEffect(() => {
-    // Smoother scrub tracking, avoids GSAP "catching up" after frame drops on low-end devices
-    gsap.ticker.lagSmoothing(0);
+    // Default lag smoothing (do NOT disable with lagSmoothing(0) — that makes
+    // scrub snap/jump to catch up after any frame drop, which is the main
+    // cause of visible jitter on real-world devices).
 
-    // Fixes rubber-banding / address-bar jank on mobile Safari & Chrome during scrub
-    ScrollTrigger.normalizeScroll(true);
+    // normalizeScroll fixes rubber-banding/address-bar jank on mobile Safari
+    // & Chrome, but it's also a known cause of scroll getting stuck after a
+    // pinned section on some mobile browsers — a worse problem than the jank
+    // it fixes. Scope it to non-touch (mouse/trackpad) devices only.
+    const hasFinePointer =
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: fine)").matches;
+    if (hasFinePointer) {
+      ScrollTrigger.normalizeScroll(true);
+    }
     ScrollTrigger.config({ ignoreMobileResize: true });
 
     const ctx = gsap.context(() => {
@@ -64,51 +115,75 @@ const Hero = () => {
         {
           isDesktop: "(min-width: 768px)",
           isMobile: "(max-width: 767px)",
+          reduceMotion: "(prefers-reduced-motion: reduce)",
         },
         (context) => {
-          let { isMobile } = context.conditions;
+          let { isMobile, reduceMotion } = context.conditions;
 
-          gsap.set([leftPanelRef.current, rightPanelRef.current, textContainerRef.current], {
-            force3D: true,
-            willChange: "transform",
-          });
+          // ---- Reduced motion: set final state instantly, skip pin/scrub ----
+          if (reduceMotion) {
+            gsap.set([leftPanelRef.current, rightPanelRef.current], {
+              xPercent: 0,
+            });
+            gsap.set(textContainerRef.current, { opacity: 1, y: 0 });
+            if (textContainerRef.current?.children) {
+              gsap.set(textContainerRef.current.children, {
+                opacity: 1,
+                y: 0,
+              });
+            }
+            return; // no ScrollTrigger/pin work at all for this user
+          }
 
-         if (isMobile) {
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: triggerRef.current,
-      start: "top top",
-      end: "+=120%", // was +=200% — panels now complete in less scroll distance
-      scrub: 0.4,     // was 1 — tighter tracking to touch/scroll input, less "lag" feel
-      fastScrollEnd: true,
-      invalidateOnRefresh: true,
-      anticipatePin: 1,
-    },
-  });
+          // will-change is only worth its cost on the elements actually
+          // doing the scroll-driven transform — not on every image.
+          gsap.set(
+            [leftPanelRef.current, rightPanelRef.current, textContainerRef.current],
+            {
+              force3D: true,
+              willChange: "transform",
+            }
+          );
 
-  tl.to(leftPanelRef.current, { xPercent: -100, ease: "none", duration: 1, force3D: true }, 0);
-  tl.to(rightPanelRef.current, { xPercent: 100, ease: "none", duration: 1, force3D: true }, 0);
-
-  tl.fromTo(
-    textContainerRef.current,
-    { y: "100vh", opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.5, ease: "power2.out", force3D: true },
-    0.5
-  );
-
-  ScrollTrigger.create({
-    trigger: triggerRef.current,
-    pin: containerRef.current,
-    start: "top top",
-    end: "+=120%", // must match the timeline's end above
-    pinSpacing: true,
-    invalidateOnRefresh: true,
-    anticipatePin: 1,
-  });
-} else {
+          if (isMobile) {
             const tl = gsap.timeline({
               scrollTrigger: {
                 trigger: triggerRef.current,
+                pin: containerRef.current,
+                pinType: "transform",
+                pinSpacing: true,
+                start: "top top",
+                end: "+=100%",
+                scrub: 0.4,
+                fastScrollEnd: true,
+                invalidateOnRefresh: true,
+                anticipatePin: 1,
+              },
+            });
+
+            tl.to(
+              leftPanelRef.current,
+              { xPercent: -100, ease: "none", duration: 1, force3D: true },
+              0
+            );
+            tl.to(
+              rightPanelRef.current,
+              { xPercent: 100, ease: "none", duration: 1, force3D: true },
+              0
+            );
+
+            tl.fromTo(
+              textContainerRef.current,
+              { y: "100vh", opacity: 0 },
+              { y: 0, opacity: 1, duration: 0.5, ease: "power2.out", force3D: true },
+              0.5
+            );
+          } else {
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger: triggerRef.current,
+                pin: containerRef.current,
+                pinSpacing: true,
                 start: "top top",
                 end: "+=150%",
                 scrub: 1,
@@ -118,34 +193,73 @@ const Hero = () => {
               },
             });
 
-            tl.to(leftPanelRef.current, { xPercent: -70, ease: "none", duration: 0.7, force3D: true }, 0);
-            tl.to(rightPanelRef.current, { xPercent: 70, ease: "none", duration: 0.7, force3D: true }, 0);
+            tl.to(
+              leftPanelRef.current,
+              { xPercent: -70, ease: "none", duration: 0.7, force3D: true },
+              0
+            );
+            tl.to(
+              rightPanelRef.current,
+              { xPercent: 70, ease: "none", duration: 0.7, force3D: true },
+              0
+            );
 
             tl.fromTo(
               textContainerRef.current.children,
               { y: 600, opacity: 0 },
-              { y: 0, opacity: 1, stagger: 0.1, duration: 0.5, ease: "power2.out", force3D: true },
+              {
+                y: 0,
+                opacity: 1,
+                stagger: 0.1,
+                duration: 0.5,
+                ease: "power2.out",
+                force3D: true,
+              },
               0.1
             );
 
-            tl.to(leftPanelRef.current, { xPercent: -100, ease: "none", duration: 0.3, force3D: true }, 0.7);
-            tl.to(rightPanelRef.current, { xPercent: 100, ease: "none", duration: 0.3, force3D: true }, 0.7);
-
-            ScrollTrigger.create({
-              trigger: triggerRef.current,
-              pin: containerRef.current,
-              start: "top top",
-              end: "+=105%",
-              pinSpacing: true,
-              invalidateOnRefresh: true,
-              anticipatePin: 1,
-            });
+            tl.to(
+              leftPanelRef.current,
+              { xPercent: -100, ease: "none", duration: 0.3, force3D: true },
+              0.7
+            );
+            tl.to(
+              rightPanelRef.current,
+              { xPercent: 100, ease: "none", duration: 0.3, force3D: true },
+              0.7
+            );
           }
         }
       );
     }, triggerRef);
 
     return () => ctx.revert();
+  }, []);
+
+  // -------------------------------------------------------------------------
+  // 3. Keep ScrollTrigger's measurements in sync with real viewport changes
+  //    (address-bar show/hide, rotation) — the most common cause of pin/scroll
+  //    glitches that only show up on real mobile devices, not desktop testing.
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    let resizeTimer;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+
+    const handleLoad = () => ScrollTrigger.refresh();
+    window.addEventListener("load", handleLoad);
+
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      window.removeEventListener("load", handleLoad);
+    };
   }, []);
 
   return (
@@ -189,49 +303,60 @@ const Hero = () => {
         </div>
 
         {/* =========================================
-            LEFT PANEL (Top Panel on Mobile)
+            PANEL WRAPPER — flex ensures the two panels always
+            split exactly 50/50 as a pair, avoiding any rounding
+            drift between two independently-positioned elements.
             ========================================= */}
-        <div
-          ref={leftPanelRef}
-          className="absolute top-0 left-0 w-full h-1/2 md:w-1/2 md:h-full z-10 bg-[#e9e9e9] border-b md:border-b-0 md:border-r border-black/5 will-change-transform"
-          style={{ contain: "layout paint style" }}
-        >
-          {leftImages.map((src, index) => (
-            <img
-              key={src}
-              ref={(el) => (leftImgRefs.current[index] = el)}
-              src={`/images/${src}`}
-              alt={`Terminal One Left View ${index + 1}`}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-              style={{ opacity: index === 0 ? 1 : 0, willChange: "opacity" }}
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              decoding="async"
-            />
-          ))}
-        </div>
+        <div className="absolute inset-0 flex flex-col md:flex-row z-10">
+          {/* LEFT PANEL (Top Panel on Mobile) */}
+          <div
+            ref={leftPanelRef}
+            className="relative w-full h-1/2 md:w-1/2 md:h-full bg-[#e9e9e9] shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.05)] md:shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.05)] will-change-transform"
+            style={{ contain: "layout paint style" }}
+          >
+            {leftImages.map((img, index) => (
+              <img
+                key={img.desktop}
+                ref={(el) => (leftImgRefs.current[index] = el)}
+                src={`/images/webp/${img.desktop}`}
+                srcSet={`/images/webp/${img.mobile} 800w, /images/webp/${img.desktop} 1600w`}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                width={IMG_WIDTH}
+                height={IMG_HEIGHT}
+                alt={`Terminal One Left View ${index + 1}`}
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+                style={{ opacity: index === 0 ? 1 : 0 }}
+                loading="eager"
+                fetchPriority={index === 0 ? "high" : "low"}
+                decoding="async"
+              />
+            ))}
+          </div>
 
-        {/* =========================================
-            RIGHT PANEL (Bottom Panel on Mobile)
-            ========================================= */}
-        <div
-          ref={rightPanelRef}
-          className="absolute bottom-0 md:top-0 right-0 w-full h-1/2 md:w-1/2 md:h-full z-10 bg-[#e9e9e9] will-change-transform"
-          style={{ contain: "layout paint style" }}
-        >
-          {rightImages.map((src, index) => (
-            <img
-              key={src}
-              ref={(el) => (rightImgRefs.current[index] = el)}
-              src={`/images/${src}`}
-              alt={`Terminal One Right View ${index + 1}`}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-              style={{ opacity: index === 0 ? 1 : 0, willChange: "opacity" }}
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              decoding="async"
-            />
-          ))}
+          {/* RIGHT PANEL (Bottom Panel on Mobile) */}
+          <div
+            ref={rightPanelRef}
+            className="relative w-full h-1/2 md:w-1/2 md:h-full bg-[#e9e9e9] will-change-transform"
+            style={{ contain: "layout paint style" }}
+          >
+            {rightImages.map((img, index) => (
+              <img
+                key={img.desktop}
+                ref={(el) => (rightImgRefs.current[index] = el)}
+                src={`/images/webp/${img.desktop}`}
+                srcSet={`/images/webp/${img.mobile} 800w, /images/webp/${img.desktop} 1600w`}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                width={IMG_WIDTH}
+                height={IMG_HEIGHT}
+                alt={`Terminal One Right View ${index + 1}`}
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+                style={{ opacity: index === 0 ? 1 : 0 }}
+                loading="eager"
+                fetchPriority={index === 0 ? "high" : "low"}
+                decoding="async"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
