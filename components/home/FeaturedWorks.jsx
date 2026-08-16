@@ -122,9 +122,9 @@ const FeaturedWorks = () => {
         {visibleCount < worksData.length && (
           <div className="mt-16 md:mt-24" data-aos="fade-up">
             <button
-              onClick={handleLoadMore}
-              className="px-10 py-4 bg-transparent border border-gray-300 text-[#1a1a1a] text-sm uppercase tracking-widest hover:text-[#1a1a1a] hover:bg-(--accent) transition-all duration-300 rounded-xl shadow-sm hover:shadow-md"
-            >
+    onClick={handleLoadMore}
+    className="w-auto px-6 py-3.5 md:px-10 md:py-4 bg-transparent border border-gray-300 text-[#1a1a1a] text-xs md:text-sm uppercase tracking-widest hover:text-[#1a1a1a] hover:bg-(--accent) transition-all duration-300 rounded-xl shadow-sm hover:shadow-md active:scale-95"
+  >
               Load More Works
             </button>
           </div>
