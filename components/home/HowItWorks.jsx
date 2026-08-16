@@ -38,7 +38,7 @@ const HowItWorks = () => {
   const sectionRef = useRef(null);
   const lineRef = useRef(null);
 
-useEffect(() => {
+  useEffect(() => {
     // Initialize AOS
     AOS.init({
       duration: 800,
@@ -105,22 +105,22 @@ useEffect(() => {
   return (
     <section 
       ref={sectionRef} 
-      className="w-full py-20 md:py-5 bg-white px-6 overflow-hidden flex items-center justify-center min-h-screen"
+      className="w-full py-0 md:py-5 bg-white px-6 overflow-hidden flex items-center justify-center min-h-screen"
     >
-      <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+      <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 lg:gap-24">
         
         {/* Left Column */}
         <div 
           data-aos="fade-right"
-          className="flex flex-col items-start h-fit lg:sticky lg:top-40"
+          className="flex flex-col items-start h-fit lg:sticky lg:top-40 w-full"
         >
           {/* Pill Badge */}
-          <div className="inline-flex items-center px-4 py-2 rounded-full border border-gray-200 text-sm font-medium text-gray-700 mb-8 shadow-[0_2px_10px_rgb(0,0,0,0.03)]">
+          <div className="inline-flex items-center px-4 py-2 rounded-full border border-gray-200 text-xs sm:text-sm font-medium text-gray-700 mb-6 sm:mb-8 shadow-[0_2px_10px_rgb(0,0,0,0.03)]">
             Simple steps — Stronger results
           </div>
 
           {/* Mixed-Font Heading */}
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1a1a1a] mb-6 tracking-tight leading-[1.2]">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1a1a1a] mb-4 sm:mb-6 tracking-tight leading-[1.2]">
             How{" "}
             <span 
               className={`${greatVibes.className} font-normal text-5xl sm:text-6xl lg:text-[4.5rem] text-[#1a1a1a] px-1`}
@@ -130,7 +130,7 @@ useEffect(() => {
             Works
           </h2>
 
-          <p className="text-gray-500 text-base md:text-lg max-w-md leading-relaxed font-light">
+          <p className="text-gray-500 text-sm sm:text-base md:text-lg max-w-full lg:max-w-md leading-relaxed font-light">
             MediaCore effectively streamlines social media marketing. Set goals & let our team manage content.
           </p>
         </div>
@@ -138,30 +138,33 @@ useEffect(() => {
         {/* Right Column (Timeline & Steps) */}
         <div 
           data-aos="fade-left"
-          className="relative py-4"
+          className="relative py-2 sm:py-4 w-full"
         >
           {/* 1. Base Gray Line */}
-          <div className="absolute left-[11px] top-6 bottom-12 w-[2px] bg-gray-100 rounded-full"></div>
+          <div className="absolute left-[11px] top-4 sm:top-6 bottom-6 sm:bottom-12 w-[2px] bg-gray-100 rounded-full"></div>
 
           {/* 2. Animated Green Line */}
           <div
             ref={lineRef}
-            className="absolute left-[11px] top-6 bottom-12 w-[2px] bg-[#84ea00] origin-top scale-y-0 rounded-full z-0"
+            className="absolute left-[11px] top-4 sm:top-6 bottom-6 sm:bottom-12 w-[2px] bg-[#84ea00] origin-top scale-y-0 rounded-full z-0"
           ></div>
 
           {/* 3. The Steps Content */}
-          <div className="flex flex-col gap-16 md:gap-24">
+          {/* Adjusted gaps for mobile to prevent taking up too much vertical space */}
+          <div className="flex flex-col gap-10 sm:gap-16 md:gap-24 w-full">
             {steps.map((step) => (
-              <div key={step.id} className="relative pl-12 md:pl-16">
+              <div key={step.id} className="relative pl-10 sm:pl-12 md:pl-16 w-full">
                 
                 {/* Hollow Green Circle Node */}
-                <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full border-[3px] border-[#84ea00] bg-white z-10 shadow-sm"></div>
+                {/* Slightly adjusted top position on mobile to align with the smaller heading */}
+                <div className="absolute left-1 sm:left-0 top-0.5 sm:top-1.5 w-4 sm:w-6 h-4 sm:h-6 rounded-full border-[3px] border-[#84ea00] bg-white z-10 shadow-sm"></div>
 
-                <h3 className="text-2xl font-bold text-[#1a1a1a] mb-3">
+                <h3 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] mb-2 sm:mb-3">
                   {step.title}
                 </h3>
                 
-                <p className="text-gray-500 text-base leading-relaxed max-w-sm font-light">
+                {/* max-w-full on mobile, max-w-sm on desktop */}
+                <p className="text-gray-500 text-sm sm:text-base leading-relaxed w-full max-w-full lg:max-w-sm font-light">
                   {step.description}
                 </p>
               </div>
