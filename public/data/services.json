@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "title": "Social Media Strategy",
+    "description": "Having a clear & easy plan is really key for consistent growth & long-term success in any successful organization.",
+    "bullets": [
+      "A clear plan ensures consistency",
+      "Content direction & tone",
+      "A strategy just for this platform"
+    ],
+    "image": "/images/webp/1-2000.webp"
+  },
+  {
+    "id": 2,
+    "title": "Content Creation",
+    "description": "Captivating content keeps you endlessly scrolling through exciting discoveries and amazing insights!",
+    "bullets": [
+      "Design striking visuals for your posts & reels!",
+      "Formats that pop on any platform!",
+      "Write catchy captions & select the best hashtags!"
+    ],
+    "image": "/images/webp/2-2000.webp"
+  },
+  {
+    "id": 3,
+    "title": "Platform Management",
+    "description": "Effortlessly manage tournaments, teams, player data, and community activities from one powerful dashboard.",
+    "bullets": [
+      "Daily posting management",
+      "Content scheduling",
+      "Brand consistency checks"
+    ],
+    "image": "/images/webp/3-2000.webp"
+  },
+  {
+    "id": 4,
+    "title": "Community Engagement",
+    "description": "Build a loyal following by actively interacting with your audience and responding to their needs.",
+    "bullets": [
+      "Proactive comment & message replies",
+      "Audience sentiment analysis",
+      "Fostering brand advocates"
+    ],
+    "image": "/images/webp/4-2000.webp"
+  },
+  {
+    "id": 5,
+    "title": "Platform Management",
+    "description": "Effortlessly manage tournaments, teams, player data, and community activities from one powerful dashboard.",
+    "bullets": [
+      "Daily posting management",
+      "Content scheduling",
+      "Brand consistency checks"
+    ],
+    "image": "/images/webp/5-2000.webp"
+  },
+  {
+    "id": 6,
+    "title": "Platform Management",
+    "description": "Effortlessly manage tournaments, teams, player data, and community activities from one powerful dashboard.",
+    "bullets": [
+      "Daily posting management",
+      "Content scheduling",
+      "Brand consistency checks"
+    ],
+    "image": "/images/webp/6-2000.webp"
+  }
+]

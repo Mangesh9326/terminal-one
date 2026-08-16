@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "title": "TAJ EXPERIENCE INDIA",
+    "category": "BRAND EXPERIENCE SHOOT",
+    "imagePrimary": "/images/webp/1-2000.webp",
+    "imageHover": "/images/webp/2-2000.webp"
+  },
+  {
+    "id": 2,
+    "title": "GATEWAY COORG",
+    "category": "PRE-OPENING",
+    "imagePrimary": "/images/webp/3-2000.webp",
+    "imageHover": "/images/webp/4-2000.webp"
+  },
+  {
+    "id": 3,
+    "title": "VIVANTA NEW DELHI",
+    "category": "LIFESTYLE CAMPAIGN",
+    "imagePrimary": "/images/webp/5-2000.webp",
+    "imageHover": "/images/webp/6-2000.webp"
+  },
+  {
+    "id": 4,
+    "title": "SELEQTIONS GOA",
+    "category": "BRAND REFRESH",
+    "imagePrimary": "/images/webp/1-2000.webp",
+    "imageHover": "/images/webp/2-2000.webp"
+  },
+  {
+    "id": 5,
+    "title": "AMADEUS MUMBAI",
+    "category": "CULINARY SHOOT",
+    "imagePrimary": "/images/webp/3-2000.webp",
+    "imageHover": "/images/webp/4-2000.webp"
+  },
+  {
+    "id": 6,
+    "title": "THE PIERRE NY",
+    "category": "HERITAGE CAMPAIGN",
+    "imagePrimary": "/images/webp/5-2000.webp",
+    "imageHover": "/images/webp/6-2000.webp"
+  },
+  {
+    "id": 7,
+    "title": "ST. JAMES'S COURT",
+    "category": "ARCHITECTURAL",
+    "imagePrimary": "/images/webp/1-2000.webp",
+    "imageHover": "/images/webp/2-2000.webp"
+  },
+  {
+    "id": 8,
+    "title": "FALAKNUMA PALACE",
+    "category": "ROYAL WEDDINGS",
+    "imagePrimary": "/images/webp/3-2000.webp",
+    "imageHover": "/images/webp/4-2000.webp"
+  }
+]

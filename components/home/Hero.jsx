@@ -6,18 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Numeric ids instead of hard-coded "N-2000.webp" strings — buildSrcSet()
-// below assembles the srcSet from the 800w/2000w pairs you already have in
-// /public/images/webp, so the BROWSER picks the right one for the viewport
-// + DPR instead of every device downloading the 2000px master.
-
 const leftImages = [1, 2, 3];
 const rightImages = [4, 5, 6];
-
 const buildSrcSet = (n) => `/images/webp/${n}-800.webp 800w, /images/webp/${n}-2000.webp 2000w`;
-
-// Panels are 100vw on mobile, 50vw on desktop — this is what lets the
-// browser's srcSet algorithm actually pick the 800w asset on phones.
 const IMG_SIZES = "(max-width: 767px) 100vw, 50vw";
 
 const Hero = () => {
@@ -30,10 +21,6 @@ const Hero = () => {
   const leftImgRefs = useRef([]);
   const rightImgRefs = useRef([]);
 
-  // ---- 1. Slideshow ------------------------------------------------------
-  // Still driven by GSAP's own delayedCall (same RAF loop as the scroll
-  // animation, no competing setInterval thread) — but now pauses while the
-  // tab is hidden, so it isn't burning CPU/battery in the background.
   useEffect(() => {
     let idx = 0;
     let delayedTicker;
@@ -74,14 +61,6 @@ const Hero = () => {
     };
   }, []);
 
-  // ---- 2. Defer the 2nd/3rd slideshow frames -----------------------------
-  // Frame 0 in each panel is eager/high-priority (it's the LCP candidate).
-  // Frames 1-2 sit underneath at opacity:0, but because they fill the same
-  // viewport-sized box, native loading="lazy" doesn't actually defer them —
-  // the browser still sees them as "in viewport" and fetches immediately,
-  // which is the biggest source of wasted bandwidth/lag on mobile. So we
-  // withhold their src until the browser is idle, keeping initial bandwidth
-  // focused on the image that's actually visible first.
   const leftAssigned = useRef(false);
   const rightAssigned = useRef(false);
 
@@ -110,6 +89,8 @@ const Hero = () => {
 
   // ---- 3. GSAP Scroll Animations (responsive via matchMedia) ------------
   useLayoutEffect(() => {
+    gsap.ticker.lagSmoothing(0);
+
     const ctx = gsap.context(() => {
       let mm = gsap.matchMedia();
 
@@ -121,11 +102,6 @@ const Hero = () => {
         (context) => {
           let { isMobile } = context.conditions;
 
-          // normalizeScroll only matters for the rubber-band/address-bar
-          // case on mobile Safari/Chrome. Scoping it to the mobile branch
-          // (instead of calling it unconditionally for every visitor)
-          // avoids adding scroll-handling overhead to desktop trackpad/
-          // wheel scrolling, where it does nothing useful.
           if (isMobile) {
             ScrollTrigger.normalizeScroll(true);
           }
@@ -134,14 +110,11 @@ const Hero = () => {
           const panels = [leftPanelRef.current, rightPanelRef.current, textContainerRef.current];
           gsap.set(panels, { force3D: true });
 
-          // Promote to the GPU compositor only while the pinned section is
-          // actually being scrubbed, instead of leaving 3 full-viewport
-          // layers will-change:transform for the entire page lifetime —
-          // that's what tends to cause jank/battery drain on low-end phones.
           const setWillChange = (on) => gsap.set(panels, { willChange: on ? "transform" : "auto" });
 
+          setWillChange(true);
+
           const sharedScrollTriggerCallbacks = {
-            onEnter: () => setWillChange(true),
             onEnterBack: () => setWillChange(true),
             onLeave: () => setWillChange(false),
             onLeaveBack: () => setWillChange(false),
@@ -152,8 +125,8 @@ const Hero = () => {
               scrollTrigger: {
                 trigger: triggerRef.current,
                 start: "top top",
-                end: "+=120%",
-                scrub: 0.4,
+                end: "+=80%", // was +=120% — shorter scroll distance on mobile only
+                scrub: 0.3, // light enough to smooth touch jitter without visibly trailing the finger
                 fastScrollEnd: true,
                 invalidateOnRefresh: true,
                 anticipatePin: 1,
@@ -175,7 +148,7 @@ const Hero = () => {
               trigger: triggerRef.current,
               pin: containerRef.current,
               start: "top top",
-              end: "+=120%", // must match the timeline's end above
+              end: "+=90%", // must match the timeline's end above
               pinSpacing: true,
               invalidateOnRefresh: true,
               anticipatePin: 1,
@@ -185,8 +158,8 @@ const Hero = () => {
               scrollTrigger: {
                 trigger: triggerRef.current,
                 start: "top top",
-                end: "+=150%",
-                scrub: 1,
+                end: "+=150%", // scroll distance unchanged
+                scrub: 0.5, // was 1 — a full second of smoothing reads as "laggy" behind fast wheel/trackpad input
                 fastScrollEnd: true,
                 invalidateOnRefresh: true,
                 anticipatePin: 1,
@@ -221,7 +194,10 @@ const Hero = () => {
       );
     }, triggerRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      gsap.ticker.lagSmoothing(500, 33); // restore GSAP's defaults
+    };
   }, []);
 
   return (
